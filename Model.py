@@ -55,7 +55,7 @@ class Model(pl.LightningModule):
                  on_epoch=True, prog_bar=True, logger=True, sync_dist=True)
         if self.hparams.loss_fn == 'negative':
             return loss * -1
-        elif self.haprams.loss_fn == 'mle':
+        elif self.hparams.loss_fn == 'mle':
             return loss  # standard MLE
         else:
             raise Exception(
