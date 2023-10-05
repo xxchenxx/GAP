@@ -7,7 +7,7 @@ from collections import Counter
 import re
 import string
 from Datasets import Custom_Dataset
-
+from deepspeed.ops.adam import DeepSpeedCPUAdam
 
 class Model(pl.LightningModule):
     def __init__(self, hparams):
@@ -15,8 +15,15 @@ class Model(pl.LightningModule):
         # Model Initializaion
         self.tokenizer = AutoTokenizer.from_pretrained(
             hparams.tokenizer_name_or_path, cache_dir=hparams.cache_dir, truncation_side='left', use_fast=False)
-        self.model = AutoModelForCausalLM.from_pretrained(
-            hparams.model_name_or_path, dropout=0, attention_dropout=0, activation_dropout=0, cache_dir=hparams.cache_dir)
+        if 'llama' in hparams.tokenizer_name_or_path:
+            self.tokenizer.pad_token = "[PAD]"
+            self.tokenizer.padding_side = "right"
+        # self.model = AutoModelForCausalLM.from_pretrained(
+        #     hparams.model_name_or_path, dropout=0, attention_dropout=0, activation_dropout=0, cache_dir=hparams.cache_dir)
+            self.model = AutoModelForCausalLM.from_pretrained(hparams.model_name_or_path)
+        else:
+            self.model = AutoModelForCausalLM.from_pretrained(
+                    hparams.model_name_or_path, dropout=0, attention_dropout=0, activation_dropout=0, cache_dir=hparams.cache_dir)
 
         self.save_hyperparameters(hparams)
         self.model.resize_token_embeddings(len(self.tokenizer))
@@ -310,7 +317,8 @@ class Model(pl.LightningModule):
 
     def configure_optimizers(self):
         parameters = self.model.parameters()
-        optimizer = torch.optim.Adam(
+        # optimizer = torch.optim.Adam(
+        optimizer =  DeepSpeedCPUAdam(
             parameters,
             lr=self.hparams.learning_rate,
             betas=(0.9, 0.98))

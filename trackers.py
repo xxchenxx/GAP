@@ -17,7 +17,11 @@ class MetricManager(Callback):
             if any(d in k.lower() for d in dataset_list):
                 if metric in k.lower():
                     values.append(v)
-        return sum(values) / len(values)
+        if len(values) > 0: 
+            
+            return sum(values) / len(values)
+        else:
+            return 0
 
     def on_validation_epoch_end(self, trainer, module):
         elogs = trainer.logged_metrics  # access it here
