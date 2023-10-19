@@ -9,6 +9,8 @@ import string
 from Datasets import Custom_Dataset
 from deepspeed.ops.adam import DeepSpeedCPUAdam
 
+from Sophia.sophia import SophiaG
+
 class Model(pl.LightningModule):
     def __init__(self, hparams):
         super(Model, self).__init__()
@@ -29,6 +31,7 @@ class Model(pl.LightningModule):
         self.model.resize_token_embeddings(len(self.tokenizer))
         # getting the index of the target set if there is multiple val sets
         self.target_validation_idx = None
+        self.optimizer_mode = 'adam'
 
     def on_fit_end(self):
         if self.hparams.save_checkpoint:
@@ -318,10 +321,16 @@ class Model(pl.LightningModule):
     def configure_optimizers(self):
         parameters = self.model.parameters()
         # optimizer = torch.optim.Adam(
-        optimizer =  DeepSpeedCPUAdam(
-            parameters,
-            lr=self.hparams.learning_rate,
-            betas=(0.9, 0.98))
+        if self.optimizer_mode == 'adam':
+            optimizer =  DeepSpeedCPUAdam(
+                parameters,
+                lr=self.hparams.learning_rate,
+                betas=(0.9, 0.98))
+        elif self.optimizer_mode == 'sophia':
+            optimizer =  SophiaG(
+                parameters,
+                lr=self.hparams.learning_rate,
+                betas=(0.965, 0.99), rho=0.01, weight_decay=1e-1)
         return [optimizer]
 
     def get_dataset(self, dataset_name, tokenizer,
@@ -343,7 +352,7 @@ class Model(pl.LightningModule):
             tokenizer=self.tokenizer,
             valid_subset_path="",
             type_path="train")
-
+        print(len(train_dataset))
         dataloader = DataLoader(
             train_dataset,
             batch_size=1,

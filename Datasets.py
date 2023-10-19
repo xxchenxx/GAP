@@ -27,7 +27,9 @@ class Custom_Dataset(Dataset):
         if self.type_path == 'train':
             self.dataset = pd.read_csv(dataset_name, lineterminator='\n')
             data_index = self.args.data_index
-            self.dataset = self.dataset.iloc[data_index: data_index+1]
+            # self.dataset = self.dataset.iloc[data_index: data_index+1]
+            import numpy as np
+            self.dataset = self.dataset.iloc[np.random.permutation(self.dataset.shape[0])[:100]]
         else:
             if '.csv' in self.dataset_name:
                 self.dataset = pd.read_csv(dataset_name, lineterminator='\n')

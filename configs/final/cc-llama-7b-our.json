@@ -5,7 +5,7 @@
     "check_validation_only": false,
     "save_checkpoint": false,
     "do_init_eval": false,
-    "train_set": "cc.csv",
+    "train_set": "cc_llama.csv",
     "loss_fn": "mle",
     "valid_sets": [
         "piqa",
